@@ -1,24 +1,32 @@
 const { pool } = require("../../../db/index");
 
+
+
+
+
+
+
 async function createReflection(req, res) {
   const { success, low_point, take_away } = req.body;
-  const userId = req.user.id;
+  const userid = req.user.id;
 
   try {
     const postQuery = `
-      INSERT INTO Reflections (success, low_point, take_away, UserId)
+      INSERT INTO Reflections (success, low_point, take_away, userid)
       VALUES ($1, $2, $3, $4)
       RETURNING *
     `;
 
-    const values = [success, low_point, take_away, userId];
+    const values = [success, low_point, take_away, userid];
+    console.log(userid)
     const newReflection = await pool.query(postQuery, values);
 
     const response = {
+      Id: newReflection.rows[0].id,
       success: newReflection.rows[0].success,
       low_point: newReflection.rows[0].low_point,
       take_away: newReflection.rows[0].take_away,
-      UserId: newReflection.rows[0].UserId,
+      UserId: newReflection.rows[0].userid,
       createdAt: newReflection.rows[0].createdat,
       updatedAt: newReflection.rows[0].updatedat,
     };
