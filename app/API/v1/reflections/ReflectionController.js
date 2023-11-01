@@ -1,11 +1,5 @@
 const { pool } = require("../../../db/index");
 
-
-
-
-
-
-
 async function createReflection(req, res) {
   const { success, low_point, take_away } = req.body;
   const userid = req.user.id;
@@ -55,7 +49,84 @@ async function getReflection(req, res) {
   }
 }
 
+async function updateReflection(req, res) {
+  try {
+    const updateQuery = `UPDATE reflections SET success = $1, low_point = $2, take_away = $3, updatedat = NOW() WHERE id = $4 RETURNING *`
+
+    const { id } = req.params
+    const { success, low_point, take_away } = req.body
+    const updateReflection = {
+      success,
+      low_point,
+      take_away,
+    } 
+
+    const values = [updateReflection.success, updateReflection.low_point, updateReflection.take_away, id]
+    const { rows } = await pool.query(updateQuery, values)
+    const response = {
+      Id: rows[0].id,
+      success: rows[0].success,
+      low_point: rows[0].low_point,
+      take_away: rows[0].take_away,
+      UserId: rows[0].userid,
+      createdAt: rows[0].createdat,
+      updatedAt: rows[0].updatedat,
+    };
+    
+    if (response) {
+      res.status(200).json(response)
+    } else {
+      res.status(401).json({
+        message: 'Unauthorized'
+      })
+    }
+    console.log(response);
+
+  } catch (error) {
+    console.error(error.message);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+}
+
+const findReflectionsById = async (id) => {
+  try {
+    const findQuery = `SELECT * FROM reflections WHERE id = $1`
+    const values = [id]
+    const { rows } = await pool.query(findQuery, values)
+    return rows[0]
+  } catch (error) {
+    console.error(error.message);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+}
+
+const deleteReflections = async (req, res) => {
+  try {
+    const { id } = req.params
+    const deleteQuery = `DELETE FROM reflections WHERE id = $1 RETURNING *`
+    const values = [id]
+    const { rows } = await pool.query(deleteQuery, values)
+
+    if (rows[0].id !== Number(id)) {
+      return res.status(401).json({
+        message: 'Unauthorized'
+      })
+    }
+
+    res.status(200).json({
+      message: 'Success delete'
+    })
+
+  } catch (error) {
+    console.error(error.message);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+}
+
 module.exports = {
   createReflection,
-  getReflection
+  getReflection,
+  updateReflection,
+  findReflectionsById,
+  deleteReflections
 };
