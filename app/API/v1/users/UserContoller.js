@@ -11,7 +11,9 @@ class UserController {
         [email]
       );
       if (emailExist.rows.length > 0) {
-        return res.status(400).json({ error: "Email already exist" });
+        return res.status(400).json({ 
+          message: "Email already used!"
+        });
       }
       const hash = hashPassword(password);
       const data = await pool.query(
@@ -39,8 +41,8 @@ class UserController {
         const user = data.rows[0];
         const isValid = comparePassword(password, user.password);
         if (isValid) {
-          const token = generateToken({ id: user.id, email: user.email });
-          return res.status(200).json({ token });
+          const access_token = generateToken({ id: user.id, email: user.email });
+          return res.status(200).json({ access_token });
         } else {
           return res.status(400).json({ error: "Invalid password" });
         }
